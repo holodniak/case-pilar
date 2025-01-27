@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.text_routes import router
 
@@ -9,6 +9,11 @@ app = FastAPI(
     description="API for text processing: counting vowels and sorting words",
     version="1.0.0",
 )
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/docs")
 
 
 @app.exception_handler(RequestValidationError)

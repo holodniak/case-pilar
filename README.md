@@ -27,7 +27,7 @@ Uma API REST desenvolvida como parte do processo seletivo da Pilar, demonstrando
 
 ## Requisitos
 
-- Python 3.8+
+- Python 3.9+
 - Poetry (gerenciador de dependências)
 
 ### Nota para usuários de macOS
@@ -191,6 +191,10 @@ poetry run pytest tests/integration/
 - [Uvicorn](https://www.uvicorn.org/) - Servidor ASGI para Python
 - [Pytest](https://docs.pytest.org/) - Framework de testes
 - [Poetry](https://python-poetry.org/) - Gerenciamento de dependências
+- [Ruff](https://docs.astral.sh/ruff/) - Linter rápido para Python
+- [Black](https://black.readthedocs.io/) - Formatador de código
+- [GitHub Actions](https://github.com/features/actions) - CI/CD
+- [Codecov](https://codecov.io/) - Relatórios de cobertura de código
 
 ## Sobre o Desenvolvimento
 
@@ -201,4 +205,47 @@ Este projeto foi desenvolvido como parte do processo seletivo da Pilar, demonstr
 - Documentação clara e objetiva
 - Uso de tecnologias modernas
 - Tratamento adequado de erros
-- Validações robustas 
+- Validações robustas
+- CI/CD com GitHub Actions
+- Cobertura de código com Codecov
+
+## Pipeline de CI/CD
+
+O projeto utiliza GitHub Actions para automação de:
+
+### Pull Requests
+- Lint com Ruff
+- Formatação com Black
+- Testes em múltiplas versões do Python (3.9, 3.10, 3.11)
+- Relatório de cobertura de código
+
+### Deploy (master)
+- Lint e testes
+- Deploy automático para Heroku
+- Geração automática do requirements.txt a partir do poetry.lock
+
+## Melhorias Futuras
+
+### Segurança
+- [ ] Implementar Rate Limit
+  - Limitar número de requisições por IP/usuário
+  - Proteção contra uso excessivo da API
+- [ ] Adicionar Autenticação
+  - Login com JWT
+  - Diferentes níveis de acesso
+  - Chaves de API para clientes
+
+### Infraestrutura
+- [ ] Melhorar Escalabilidade
+  - Adicionar load balancer
+  - Implementar cache
+  - Preparar para alto número de requisições
+
+### Monitoramento
+- [ ] Logs e Métricas
+  - Melhorar sistema de logs
+  - Monitorar performance
+  - Alertas de erros
+- [ ] Health Check
+  - Endpoint para verificar status da API
+  - Monitoramento de recursos (CPU, memória)
