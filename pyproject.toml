@@ -16,6 +16,8 @@ pytest = "^8.0.0"
 httpx = "^0.26.0"
 pytest-asyncio = "^0.23.5"
 pytest-cov = "^4.1.0"
+ruff = "^0.2.1"
+black = "^24.1.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -27,4 +29,15 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --cov=app --cov-report=term-missing"
-pythonpath = "." 
+pythonpath = "."
+
+[tool.ruff]
+select = ["E", "F", "I", "N", "W", "B"]
+ignore = []
+line-length = 88
+target-version = "py38"
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+include = '\.pyi?$' 

@@ -74,4 +74,9 @@ log/
 # Environment variables
 .env
 .env.local
-.env.*.local 
+.env.*.local
+
+# Heroku
+.heroku/
+*.pyc
+staticfiles/ 
