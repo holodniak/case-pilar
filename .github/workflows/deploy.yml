@@ -1,57 +1,103 @@
-name: Deploy
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  deploy:
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.7.1
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-    - name: Load cached venv
-      id: cached-poetry-dependencies
-      uses: actions/cache@v3
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-3.10-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        run: poetry install --no-interaction
 
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
+      - name: Run linting
+        run: |
+          poetry run ruff check .
+          poetry run black . --check
 
-    - name: Install project
-      run: poetry install --no-interaction
+  test:
+    name: Run Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-    - name: Run tests
-      run: |
-        poetry run pytest tests/
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Create requirements.txt for Heroku
-      run: |
-        poetry export -f requirements.txt --output requirements.txt --without-hashes
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-    - name: Create Procfile
-      run: |
-        echo "web: uvicorn app:app --host=0.0.0.0 --port=\$PORT" > Procfile
+      - name: Install dependencies
+        run: poetry install --no-interaction
 
-    - name: Deploy to Heroku
-      uses: akhileshns/heroku-deploy@v3.12.14
-      with:
-        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-        heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-        heroku_email: ${{ secrets.HEROKU_EMAIL }}
-        buildpack: "heroku/python" 
+      - name: Run tests
+        run: |
+          poetry run pytest tests/ --cov=app --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
+
+  deploy:
+    name: Deploy to Heroku
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Create requirements.txt
+        run: |
+          poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+      - name: Create Procfile
+        run: |
+          echo "web: uvicorn app:app --host=0.0.0.0 --port=\$PORT" > Procfile
+
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.14
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          buildpack: "heroku/python" 
