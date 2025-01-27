@@ -17,8 +17,11 @@ Uma API REST desenvolvida como parte do processo seletivo da Pilar, demonstrando
 │   └── services/
 │       └── text_service.py
 ├── tests/
-│   └── test_text_service.py
-├── requirements.txt
+│   ├── integration/
+│   │   └── test_api_routes.py
+│   └── unit/
+│       └── test_text_service.py
+├── pyproject.toml
 └── README.md
 ```
 
@@ -86,35 +89,18 @@ A documentação alternativa (ReDoc) está disponível em:
 - **Endpoint**: `POST /api/v1/vowel_count`
 - **Descrição**: Analisa e conta o número de vogais em cada palavra fornecida
 - **Content-Type**: application/json (obrigatório)
-- **Validações**:
-  - Lista não pode estar vazia
-  - Todos os elementos devem ser strings
-  - Palavras não podem estar vazias ou conter apenas espaços
-- **Exemplo de Request**:
+- **Request Body**:
 ```json
 {
     "words": ["desenvolvimento", "tecnologia", "inovacao"]
 }
 ```
-- **Exemplo de Response (Sucesso)**:
+- **Resposta de Sucesso** (200 OK):
 ```json
 {
-    "desenvolvimento": 7,
+    "desenvolvimento": 6,
     "tecnologia": 5,
     "inovacao": 5
-}
-```
-- **Exemplo de Response (Erro - Lista com elementos não-string)**:
-```json
-{
-    "error": "Erro de validação",
-    "details": [
-        {
-            "field": "words",
-            "message": "Todos os elementos devem ser strings",
-            "received": [123, "texto", true]
-        }
-    ]
 }
 ```
 
@@ -122,74 +108,61 @@ A documentação alternativa (ReDoc) está disponível em:
 - **Endpoint**: `POST /api/v1/sort`
 - **Descrição**: Ordena uma lista de palavras em ordem ascendente ou descendente
 - **Content-Type**: application/json (obrigatório)
-- **Validações**:
-  - Lista não pode estar vazia
-  - Todos os elementos devem ser strings
-  - Palavras não podem estar vazias ou conter apenas espaços
-  - Ordem deve ser exatamente "asc" ou "desc"
-- **Exemplo de Request (Sucesso)**:
+- **Request Body**:
 ```json
 {
     "words": ["software", "desenvolvimento", "qualidade"],
     "order": "asc"
 }
 ```
-- **Exemplo de Response (Sucesso)**:
+- **Resposta de Sucesso** (200 OK):
 ```json
 ["desenvolvimento", "qualidade", "software"]
 ```
-- **Exemplo de Response (Erro - Ordem inválida)**:
+
+## Respostas de Erro
+
+A API utiliza códigos HTTP padrão para indicar o status da requisição:
+
+### 1. Erro de Validação (422 Unprocessable Entity)
+Quando os dados enviados não atendem às validações:
+
 ```json
 {
     "error": "Erro de validação",
-    "details": [
-        {
-            "field": "order",
-            "message": "O valor deve ser 'asc' ou 'desc'",
-            "received": "crescente"
-        }
-    ]
+    "detail": {
+        "field": "order",
+        "message": "O valor deve ser 'asc' ou 'desc'",
+        "received": "invalid"
+    }
 }
 ```
 
-## Códigos de Status HTTP
+### 2. Content-Type Inválido (415 Unsupported Media Type)
+Quando o Content-Type não é application/json:
 
-A API utiliza os seguintes códigos de status HTTP:
-
-- `200 OK`: Requisição bem-sucedida
-- `400 Bad Request`: Dados inválidos no corpo da requisição
-- `404 Not Found`: Rota não encontrada
-- `415 Unsupported Media Type`: Content-Type não é application/json
-- `422 Unprocessable Entity`: Dados válidos sintaticamente mas semanticamente incorretos
-- `500 Internal Server Error`: Erro interno do servidor
-
-### Exemplos de Erros Comuns
-
-1. **Content-Type Incorreto**:
 ```json
 {
-    "detail": "Content-Type deve ser application/json"
+    "detail": "Unsupported Media Type"
 }
 ```
 
-2. **Rota Não Encontrada**:
+### 3. Método Não Permitido (405 Method Not Allowed)
+Quando usa um método HTTP não suportado (ex: GET em vez de POST):
+
 ```json
 {
-    "detail": "Rota não encontrada"
+    "detail": "Method Not Allowed"
 }
 ```
+Headers incluem: `Allow: POST`
 
-3. **Validação de Dados**:
+### 4. Rota Não Encontrada (404 Not Found)
+Quando tenta acessar uma rota que não existe:
+
 ```json
 {
-    "error": "Erro de validação",
-    "details": [
-        {
-            "field": "words",
-            "message": "A lista de palavras não pode estar vazia",
-            "received": []
-        }
-    ]
+    "detail": "Not Found"
 }
 ```
 
@@ -203,6 +176,12 @@ poetry run pytest
 
 # Executar testes com cobertura
 poetry run pytest --cov=app tests/
+
+# Executar apenas testes unitários
+poetry run pytest tests/unit/
+
+# Executar apenas testes de integração
+poetry run pytest tests/integration/
 ```
 
 ## Tecnologias Utilizadas
@@ -211,12 +190,15 @@ poetry run pytest --cov=app tests/
 - [Pydantic](https://pydantic-docs.helpmanual.io/) - Validação de dados
 - [Uvicorn](https://www.uvicorn.org/) - Servidor ASGI para Python
 - [Pytest](https://docs.pytest.org/) - Framework de testes
+- [Poetry](https://python-poetry.org/) - Gerenciamento de dependências
 
 ## Sobre o Desenvolvimento
 
 Este projeto foi desenvolvido como parte do processo seletivo da Pilar, demonstrando:
 - Arquitetura limpa e organizada
 - Boas práticas de desenvolvimento
-- Testes automatizados
+- Testes automatizados (unitários e de integração)
 - Documentação clara e objetiva
-- Uso de tecnologias modernas 
+- Uso de tecnologias modernas
+- Tratamento adequado de erros
+- Validações robustas 
