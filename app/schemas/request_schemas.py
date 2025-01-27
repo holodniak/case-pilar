@@ -17,7 +17,8 @@ class Words(BaseModel):
     )
 
     @field_validator("words")
-    def validate_words(self, words: List[str]) -> List[str]:
+    @classmethod
+    def validate_words(cls, words: List[str]) -> List[str]:
         if not words:
             raise ValueError("A lista de palavras não pode estar vazia")
 
